@@ -36,4 +36,9 @@ public class DepositStripsAction implements StripsAction {
 		return state.applyAction(this);
 	}
 
+	@Override
+	public ActionType getActionType() {
+		return ActionType.DEPOSIT;
+	}
+
 }

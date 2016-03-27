@@ -32,4 +32,9 @@ public class GatherStripsAction implements StripsAction {
 		return state.applyAction(this);
 	}
 
+	@Override
+	public ActionType getActionType() {
+		return ActionType.GATHER;
+	}
+
 }

@@ -7,10 +7,10 @@ import edu.cwru.sepia.agent.planner.Position;
 import edu.cwru.sepia.util.Direction;
 
 public class MoveStripsAction implements StripsAction {
-	
+
 	private final Direction direction;
 	private final int peasantId;
-	
+
 	public MoveStripsAction(Direction direction, int peasantId) {
 		this.direction = direction;
 		this.peasantId = peasantId;
@@ -32,6 +32,11 @@ public class MoveStripsAction implements StripsAction {
 	@Override
 	public GameState apply(GameState state) {
 		return state.applyAction(this);
+	}
+
+	@Override
+	public ActionType getActionType() {
+		return ActionType.MOVE;
 	}
 
 }

@@ -165,7 +165,8 @@ public class GameState implements Comparable<GameState> {
 		if (isGoal()) {
 			return 0;
 		}
-
+		// TODO
+		return 0.0;
 	}
 
 	/**
