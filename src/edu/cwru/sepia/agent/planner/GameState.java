@@ -40,7 +40,7 @@ public class GameState implements Comparable<GameState> {
 	private final int requiredGold;
 	private final int requriedWood;
 	private final boolean buildPeasants;
-	private final Map<Integer, PeasantState> peasantLocs;
+	private final Map<Integer, PeasantState> peasantStates;
 	private final List<ResourceState> trees;
 	private final List<ResourceState> gold;
 	private Position townHall;
@@ -74,7 +74,7 @@ public class GameState implements Comparable<GameState> {
 		this.requiredGold = requiredGold;
 		this.requriedWood = requiredWood;
 		this.buildPeasants = buildPeasants;
-		this.peasantLocs = new HashMap<Integer, PeasantState>();
+		this.peasantStates = new HashMap<Integer, PeasantState>();
 		this.trees = new ArrayList<ResourceState>();
 		this.gold = new ArrayList<ResourceState>();
 		for (ResourceView resource : state.getAllResourceNodes()) {
@@ -91,7 +91,7 @@ public class GameState implements Comparable<GameState> {
 						unit.getYPosition());
 			}
 			if (unit.getTemplateView().getName().equals("Peasant")) {
-				peasantLocs
+				peasantStates
 						.put(unit.getID(),
 								new PeasantState(unit.getID(), unit
 										.getCargoAmount(), unit.getCargoType(),
@@ -135,7 +135,7 @@ public class GameState implements Comparable<GameState> {
 	public List<GameState> generateChildren() {
 		// TODO this will need to change when there are multiple peasants
 		List<StripsAction> actions = new ArrayList<StripsAction>();
-		int peasantId = peasantLocs.keySet().iterator().next();
+		int peasantId = peasantStates.keySet().iterator().next();
 		for (Direction dir : Direction.values()) {
 			actions.add(new MoveStripsAction(dir, peasantId));
 		}
@@ -162,8 +162,10 @@ public class GameState implements Comparable<GameState> {
 	 *         this state.
 	 */
 	public double heuristic() {
-		// TODO: Implement me!
-		return 0.0;
+		if (isGoal()) {
+			return 0;
+		}
+
 	}
 
 	/**
@@ -222,7 +224,7 @@ public class GameState implements Comparable<GameState> {
 	}
 
 	public Position getPeasantPosition(int peasantId) {
-		return peasantLocs.get(peasantId).getPosition();
+		return peasantStates.get(peasantId).getPosition();
 	}
 
 	public int getXExtent() {
@@ -254,4 +256,30 @@ public class GameState implements Comparable<GameState> {
 		return townHall;
 	}
 
+	public List<Position> getNonEmptyResourcePositions() {
+		List<Position> positions = new ArrayList<Position>();
+		for (ResourceState state : trees) {
+			if (state.getRemaining() > 0) {
+				positions.add(state.getPostion());
+			}
+		}
+		for (ResourceState state : gold) {
+			if (state.getRemaining() > 0) {
+				positions.add(state.getPostion());
+			}
+		}
+		return positions;
+	}
+
+	public PeasantState getPeasant(int peasantID) {
+		return peasantStates.get(peasantID);
+	}
+
+	public int getCurrentGold() {
+		return currentGold;
+	}
+
+	public int getCurrentFood() {
+		return 3 - peasantStates.size();
+	}
 }
