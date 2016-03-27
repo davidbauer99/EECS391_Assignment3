@@ -162,8 +162,10 @@ public class GameState implements Comparable<GameState> {
 	 *         this state.
 	 */
 	public double heuristic() {
-		// TODO: Implement me!
-		return 0.0;
+		if (isGoal()) {
+			return 0;
+		}
+
 	}
 
 	/**
@@ -271,5 +273,13 @@ public class GameState implements Comparable<GameState> {
 
 	public PeasantState getPeasant(int peasantID) {
 		return peasantStates.get(peasantID);
+	}
+
+	public int getCurrentGold() {
+		return currentGold;
+	}
+
+	public int getCurrentFood() {
+		return 3 - peasantStates.size();
 	}
 }
