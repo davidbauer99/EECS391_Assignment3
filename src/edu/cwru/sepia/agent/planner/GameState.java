@@ -1,8 +1,17 @@
 package edu.cwru.sepia.agent.planner;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import edu.cwru.sepia.agent.planner.actions.MoveStripsAction;
+import edu.cwru.sepia.agent.planner.actions.StripsAction;
+import edu.cwru.sepia.environment.model.state.ResourceNode.ResourceView;
+import edu.cwru.sepia.environment.model.state.ResourceNode.Type;
+import edu.cwru.sepia.environment.model.state.ResourceType;
 import edu.cwru.sepia.environment.model.state.State;
+import edu.cwru.sepia.environment.model.state.Unit.UnitView;
 import edu.cwru.sepia.util.Direction;
 
 /**
@@ -25,6 +34,22 @@ import edu.cwru.sepia.util.Direction;
 public class GameState implements Comparable <GameState>
 {
 
+  private final int playernum;
+  private final int requiredGold;
+  private final int requriedWood;
+  private final boolean buildPeasants;
+  private final Map <Integer, PeasantState> peasantLocs;
+  private final List <ResourceState> trees;
+  private final List <ResourceState> gold;
+  private Position townHall;
+  private final int currentWood;
+  private final int currentGold;
+  private final StripsAction previousAction;
+  private final double cost;
+  private final int xExtent;
+  private final int yExtent;
+  private final GameState parent;
+
   /**
    * Construct a GameState from a stateview object. This is used to construct the initial search node. All other nodes
    * should be constructed from the another constructor you create or by factory functions that you create.
@@ -42,8 +67,43 @@ public class GameState implements Comparable <GameState>
    */
   public GameState (State.StateView state, int playernum, int requiredGold, int requiredWood, boolean buildPeasants)
   {
-
-    // TODO: Implement me!
+    this.playernum = playernum;
+    this.requiredGold = requiredGold;
+    this.requriedWood = requiredWood;
+    this.buildPeasants = buildPeasants;
+    this.peasantLocs = new HashMap <Integer, PeasantState> ();
+    this.trees = new ArrayList <ResourceState> ();
+    this.gold = new ArrayList <ResourceState> ();
+    for (ResourceView resource : state.getAllResourceNodes ())
+    {
+      if (resource.getType ().equals (Type.GOLD_MINE))
+      {
+        gold.add (new ResourceState (resource));
+      }
+      if (resource.getType ().equals (Type.TREE))
+      {
+        trees.add (new ResourceState (resource));
+      }
+    }
+    for (UnitView unit : state.getUnits (playernum))
+    {
+      if (unit.getTemplateView ().getName ().equals ("TownHall"))
+      {
+        townHall = new Position (unit.getXPosition (), unit.getYPosition ());
+      }
+      if (unit.getTemplateView ().getName ().equals ("Peasant"))
+      {
+        peasantLocs.put (unit.getID (), new PeasantState (unit.getID (), unit.getCargoAmount (), unit.getCargoType (),
+                new Position (unit.getXPosition (), unit.getYPosition ())));
+      }
+    }
+    this.currentGold = state.getResourceAmount (playernum, ResourceType.GOLD);
+    this.currentWood = state.getResourceAmount (playernum, ResourceType.WOOD);
+    this.previousAction = null;
+    this.cost = 0;
+    this.xExtent = state.getXExtent ();
+    this.yExtent = state.getYExtent ();
+    this.parent = null;
   }
 
   /**
@@ -55,8 +115,7 @@ public class GameState implements Comparable <GameState>
    */
   public boolean isGoal ()
   {
-    // TODO: Implement me!
-    return false;
+    return requiredGold <= currentGold && requriedWood <= currentWood;
   }
 
   /**
@@ -67,8 +126,24 @@ public class GameState implements Comparable <GameState>
    */
   public List <GameState> generateChildren ()
   {
-    // TODO: Implement me!
-    return null;
+    // TODO this will need to change when there are multiple peasants
+    List <StripsAction> actions = new ArrayList <StripsAction> ();
+    int peasantId = peasantLocs.keySet ().iterator ().next ();
+    for (Direction dir : Direction.values ())
+    {
+      actions.add (new MoveStripsAction (dir, peasantId));
+    }
+    // TODO iterate over gold and trees, add a gather action for each
+    // TODO iterate over peasants, add a deposit action for reach of them
+    List <GameState> children = new ArrayList <GameState> ();
+    for (StripsAction action : actions)
+    {
+      if (action.preconditionsMet (this))
+      {
+        children.add (action.apply (this));
+      }
+    }
+    return children;
   }
 
   /**
@@ -94,8 +169,7 @@ public class GameState implements Comparable <GameState>
    */
   public double getCost ()
   {
-    // TODO: Implement me!
-    return 0.0;
+    return cost;
   }
 
   /**
@@ -109,8 +183,9 @@ public class GameState implements Comparable <GameState>
   @Override
   public int compareTo (GameState o)
   {
-    // TODO: Implement me!
-    return 0;
+    Double thisVal = getCost () + heuristic ();
+    Double otherVal = o.getCost () + o.heuristic ();
+    return thisVal.compareTo (otherVal);
   }
 
   /**
@@ -142,32 +217,38 @@ public class GameState implements Comparable <GameState>
 
   public Position getPeasantPosition (int peasantId)
   {
-    // TODO Auto-generated method stub
-    return null;
+    return peasantLocs.get (peasantId).getPosition ();
   }
 
   public int getXExtent ()
   {
-    // TODO Auto-generated method stub
-    return 0;
+    return xExtent;
   }
 
   public int getYExtent ()
   {
-    // TODO Auto-generated method stub
-    return 0;
+    return yExtent;
   }
 
   public List <Position> getOccupiedPositions ()
   {
-    // TODO Auto-generated method stub
-    return null;
+    List <Position> allPositions = new ArrayList <Position> ();
+    for (ResourceState state : trees)
+    {
+      allPositions.add (state.getPostion ());
+    }
+    for (ResourceState state : gold)
+    {
+      allPositions.add (state.getPostion ());
+    }
+    allPositions.add (townHall);
+    return allPositions;
   }
 
-  public GameState applyPeasantMove (int peasantId, Direction direction)
+  public GameState applyAction (StripsAction stripsAction)
   {
-    return null;
     // TODO Auto-generated method stub
-
+    return null;
   }
+
 }
