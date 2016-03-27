@@ -1,6 +1,7 @@
 package edu.cwru.sepia.agent.planner;
 
 import edu.cwru.sepia.environment.model.state.State;
+import edu.cwru.sepia.util.Direction;
 
 import java.util.List;
 
@@ -121,4 +122,30 @@ public class GameState implements Comparable<GameState> {
         // TODO: Implement me!
         return 0;
     }
+
+	public Position getPeasantPosition(int peasantId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public int getXExtent() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public int getYExtent() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public List<Position> getOccupiedPositions() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public GameState applyPeasantMove(int peasantId, Direction direction) {
+		return null;
+		// TODO Auto-generated method stub
+		
+	}
 }
