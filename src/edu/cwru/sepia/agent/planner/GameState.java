@@ -254,4 +254,18 @@ public class GameState implements Comparable<GameState> {
 		return townHall;
 	}
 
+	public List<Position> getNonEmptyResourcePositions() {
+		List<Position> positions = new ArrayList<Position>();
+		for (ResourceState state : trees) {
+			if (state.getRemaining() > 0) {
+				positions.add(state.getPostion());
+			}
+		}
+		for (ResourceState state : gold) {
+			if (state.getRemaining() > 0) {
+				positions.add(state.getPostion());
+			}
+		}
+		return positions;
+	}
 }
