@@ -2,7 +2,7 @@ package edu.cwru.sepia.agent.planner.actions;
 
 import edu.cwru.sepia.agent.planner.GameState;
 
-public class ProductionStripsAction
+public class ProductionStripsAction implements StripsAction
 {
   public boolean preconditionsMet (GameState state)
   {
