@@ -1,5 +1,6 @@
 package edu.cwru.sepia.agent.planner;
 
+import edu.cwru.sepia.agent.planner.actions.StripsAction;
 import edu.cwru.sepia.environment.model.state.State;
 import edu.cwru.sepia.util.Direction;
 
@@ -143,9 +144,8 @@ public class GameState implements Comparable<GameState> {
 		return null;
 	}
 
-	public GameState applyPeasantMove(int peasantId, Direction direction) {
-		return null;
+	public GameState applyAction(StripsAction stripsAction) {
 		// TODO Auto-generated method stub
-		
+		return null;
 	}
 }

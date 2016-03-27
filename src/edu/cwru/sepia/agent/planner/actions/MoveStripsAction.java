@@ -31,7 +31,7 @@ public class MoveStripsAction implements StripsAction {
 
 	@Override
 	public GameState apply(GameState state) {
-		return state.applyPeasantMove(peasantId, direction);
+		return state.applyAction(this);
 	}
 
 }
