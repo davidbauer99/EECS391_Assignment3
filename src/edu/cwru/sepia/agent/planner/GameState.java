@@ -3,6 +3,7 @@ package edu.cwru.sepia.agent.planner;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -62,7 +63,6 @@ public class GameState implements Comparable<GameState> {
 			Position townHall, int currentWood, int currentGold,
 			StripsAction previousAction, double cost, int xExtent, int yExtent,
 			GameState parent) {
-		super();
 		this.playernum = playernum;
 		this.requiredGold = requiredGold;
 		this.requiredWood = requiredWood;
@@ -300,8 +300,27 @@ public class GameState implements Comparable<GameState> {
 	}
 
 	private ResourceState getClosestResource(Position position) {
-		// TODO Auto-generated method stub
-		return null;
+		int minDist = Integer.MAX_VALUE;
+		ResourceState closest = null;
+		for (ResourceState res : trees) {
+			if (closest == null
+					|| position.chebyshevDistance(res.getPostion()) < minDist) {
+				closest = res;
+				minDist = position.chebyshevDistance(res.getPostion());
+			}
+		}
+		for (ResourceState res : gold) {
+			if (closest == null
+					|| position.chebyshevDistance(res.getPostion()) < minDist) {
+				closest = res;
+				minDist = position.chebyshevDistance(res.getPostion());
+			}
+		}
+		return closest;
+	}
+
+	public StripsAction getPreviousAction() {
+		return previousAction;
 	}
 
 	/**
@@ -589,7 +608,7 @@ public class GameState implements Comparable<GameState> {
 	}
 
 	public Collection<PeasantState> getPeasants() {
-		return peasantStates.values();
+		return new HashSet<PeasantState>(peasantStates.values());
 	}
 
 	public int getCurrentGold() {
@@ -602,5 +621,9 @@ public class GameState implements Comparable<GameState> {
 
 	public int desiredPeasantNumber() {
 		return optimalPeasantCount();
+	}
+
+	public GameState getParent() {
+		return parent;
 	}
 }

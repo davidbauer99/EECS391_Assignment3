@@ -6,7 +6,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.Stack;
 
 import edu.cwru.sepia.action.Action;
@@ -105,8 +109,68 @@ public class PlannerAgent extends Agent {
 	 * @return The plan or null if no plan is found.
 	 */
 	private Stack<StripsAction> AstarSearch(GameState startState) {
-		// TODO: Implement me!
+		GameState start = startState;
+
+		// Create the open and closed list
+		PriorityQueue<GameState> openList = new PriorityQueue<GameState>();
+		Set<GameState> closedList = new HashSet<GameState>();
+		// Add the current location to the open list
+		openList.add(start);
+		GameState currentState = openList.poll();
+
+		while (currentState != null) {
+			// If the current location is the goal, build the path
+			if (currentState.isGoal()) {
+				return buildPath(currentState, start);
+			}
+			// Get the neighbors that are on the map and not obstacles
+			Collection<GameState> children = currentState.generateChildren();
+			// Check each neighbor
+			for (GameState state : children) {
+				// If a better path to this node is in the open list, skip it
+				if (existsWithLowerCost(openList, state)) {
+					continue;
+				}
+				// If already in closed set
+				if (closedList.contains(state)) {
+					continue;
+				}
+				// Remove this node from any list that may contain it
+				closedList.remove(state);
+				openList.remove(state);
+				// Add it to the open list
+				openList.add(state);
+			}
+			// Mark currentState as having been searched
+			closedList.add(currentState);
+			// Move to the next best node
+			currentState = openList.poll();
+		}
+		// If the closed list is empty, then there is no path
+		System.out.println("No available path.");
+		System.exit(0);
 		return null;
+	}
+
+	private Stack<StripsAction> buildPath(GameState currentState, GameState start) {
+		Stack<StripsAction> path = new Stack<StripsAction>();
+		GameState end = currentState;
+		while (end != null && !end.equals(start)) {
+			path.push(end.getPreviousAction());
+			end = end.getParent();
+		}
+		return path;
+	}
+
+	private boolean existsWithLowerCost(PriorityQueue<GameState> openList,
+			GameState loc) {
+		GameState[] locArray = openList.toArray(new GameState[] {});
+		for (GameState arrLoc : locArray) {
+			if (arrLoc.equals(loc) && arrLoc.getCost() < loc.getCost()) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
