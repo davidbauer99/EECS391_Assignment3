@@ -295,7 +295,7 @@ public class GameState implements Comparable<GameState> {
 		}
 		int resourcesOutstanding = goldOutstanding + woodOutstanding;
 		actionsNeeded += ((resourcesOutstanding / 100) * 4.0);
-		actionsNeeded = actionsNeeded / optimalPeasantCount();
+		actionsNeeded = actionsNeeded / peasantStates.size();
 		return actionsNeeded;
 	}
 
@@ -361,41 +361,14 @@ public class GameState implements Comparable<GameState> {
 		if (getClass() != obj.getClass())
 			return false;
 		GameState other = (GameState) obj;
-		if (buildPeasants != other.buildPeasants)
-			return false;
 		if (currentGold != other.currentGold)
 			return false;
 		if (currentWood != other.currentWood)
-			return false;
-		if (gold == null) {
-			if (other.gold != null)
-				return false;
-		} else if (!gold.equals(other.gold))
 			return false;
 		if (peasantStates == null) {
 			if (other.peasantStates != null)
 				return false;
 		} else if (!peasantStates.equals(other.peasantStates))
-			return false;
-		if (playernum != other.playernum)
-			return false;
-		if (requiredGold != other.requiredGold)
-			return false;
-		if (requiredWood != other.requiredWood)
-			return false;
-		if (townHall == null) {
-			if (other.townHall != null)
-				return false;
-		} else if (!townHall.equals(other.townHall))
-			return false;
-		if (trees == null) {
-			if (other.trees != null)
-				return false;
-		} else if (!trees.equals(other.trees))
-			return false;
-		if (xExtent != other.xExtent)
-			return false;
-		if (yExtent != other.yExtent)
 			return false;
 		return true;
 	}
@@ -404,20 +377,10 @@ public class GameState implements Comparable<GameState> {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (buildPeasants ? 1231 : 1237);
 		result = prime * result + currentGold;
 		result = prime * result + currentWood;
-		result = prime * result + ((gold == null) ? 0 : gold.hashCode());
 		result = prime * result
 				+ ((peasantStates == null) ? 0 : peasantStates.hashCode());
-		result = prime * result + playernum;
-		result = prime * result + requiredGold;
-		result = prime * result + requiredWood;
-		result = prime * result
-				+ ((townHall == null) ? 0 : townHall.hashCode());
-		result = prime * result + ((trees == null) ? 0 : trees.hashCode());
-		result = prime * result + xExtent;
-		result = prime * result + yExtent;
 		return result;
 	}
 
@@ -465,8 +428,8 @@ public class GameState implements Comparable<GameState> {
 			DepositStripsAction deposit = (DepositStripsAction) stripsAction;
 			List<Integer> ids = deposit.getPeasantIdsForAction(this);
 			Collection<PeasantState> updatedPeasants = getPeasants();
-			int newWood = requiredWood;
-			int newGold = requiredGold;
+			int newWood = currentWood;
+			int newGold = currentGold;
 			for (Integer id : ids) {
 				PeasantState peasant = getPeasant(id);
 				updatedPeasants.remove(peasant);
@@ -625,5 +588,9 @@ public class GameState implements Comparable<GameState> {
 
 	public GameState getParent() {
 		return parent;
+	}
+
+	public int getCurrentWood() {
+		return currentWood;
 	}
 }

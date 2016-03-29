@@ -55,6 +55,7 @@ public class PlannerAgent extends Agent {
 
 		Stack<StripsAction> plan = AstarSearch(new GameState(stateView,
 				playernum, requiredGold, requiredWood, buildPeasants));
+		System.out.println("FINISHED");
 
 		if (plan == null) {
 			System.err.println("No plan was found");
@@ -119,6 +120,9 @@ public class PlannerAgent extends Agent {
 		GameState currentState = openList.poll();
 
 		while (currentState != null) {
+			System.out.println(currentState.getCurrentGold() + " "
+					+ currentState.getCurrentWood() + " "
+					+ currentState.getPeasants().size());
 			// If the current location is the goal, build the path
 			if (currentState.isGoal()) {
 				return buildPath(currentState, start);
@@ -152,7 +156,8 @@ public class PlannerAgent extends Agent {
 		return null;
 	}
 
-	private Stack<StripsAction> buildPath(GameState currentState, GameState start) {
+	private Stack<StripsAction> buildPath(GameState currentState,
+			GameState start) {
 		Stack<StripsAction> path = new Stack<StripsAction>();
 		GameState end = currentState;
 		while (end != null && !end.equals(start)) {

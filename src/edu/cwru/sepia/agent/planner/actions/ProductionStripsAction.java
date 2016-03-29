@@ -1,5 +1,6 @@
 package edu.cwru.sepia.agent.planner.actions;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import edu.cwru.sepia.agent.planner.GameState;
@@ -36,7 +37,6 @@ public class ProductionStripsAction implements StripsAction {
 
 	@Override
 	public List<Integer> getPeasantIdsForAction(GameState gameState) {
-		// TODO Auto-generated method stub
-		return null;
+		return new ArrayList<Integer>();
 	}
 }

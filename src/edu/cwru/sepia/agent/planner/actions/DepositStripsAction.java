@@ -2,6 +2,7 @@ package edu.cwru.sepia.agent.planner.actions;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import edu.cwru.sepia.agent.planner.GameState;
@@ -70,9 +71,41 @@ public class DepositStripsAction implements StripsAction {
 	}
 
 	@Override
-	public List<Integer> getPeasantIdsForAction(GameState gameState) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<Integer> getPeasantIdsForAction(GameState state) {
+		Collection<PeasantState> peasants = state.getPeasants();
+		Collection<PeasantState> toRemove = new HashSet<PeasantState>();
+		// If the deposit site isn't the town hall, false
+		if (!state.getTownHallPosition().equals(depositPosition)) {
+			return new ArrayList<Integer>();
+		}
+		// Check that enough peasants are there
+		List<PeasantState> peasantsAtDepositSite = new ArrayList<PeasantState>();
+		for (PeasantState peasant : peasants) {
+			if (peasant.getPosition().chebyshevDistance(depositPosition) <= 1) {
+				peasantsAtDepositSite.add(peasant);
+			}
+		}
+		if (peasantsAtDepositSite.size() < peasantCount) {
+			return new ArrayList<Integer>();
+		}
+		// Check that the desired number of peasants have cargo
+		int peasantsWithCargo = 0;
+		for (PeasantState peasant : peasantsAtDepositSite) {
+			if (peasant.getCargoAmount() > 0) {
+				peasantsWithCargo++;
+			} else {
+				toRemove.add(peasant);
+			}
+		}
+		if (peasantsWithCargo < peasantCount) {
+			return new ArrayList<Integer>();
+		}
+		// All good.
+		List<Integer> ids = new ArrayList<Integer>();
+		peasantsAtDepositSite.removeAll(toRemove);
+		peasantsAtDepositSite.stream().limit(peasantCount)
+				.forEach(p -> ids.add(p.getId()));
+		return ids;
 	}
 
 }
