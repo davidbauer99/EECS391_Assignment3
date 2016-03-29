@@ -1,34 +1,52 @@
 package edu.cwru.sepia.agent.planner.actions;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import edu.cwru.sepia.agent.planner.GameState;
 import edu.cwru.sepia.agent.planner.PeasantState;
 import edu.cwru.sepia.agent.planner.Position;
-import edu.cwru.sepia.util.Direction;
 
 public class DepositStripsAction implements StripsAction {
 
-	private final Direction direction;
-	private final int peasantID;
+	private final int peasantCount;
+	private final Position depositPosition;
 
-	public DepositStripsAction(Direction direction, int peasantID) {
-		this.direction = direction;
-		this.peasantID = peasantID;
+	public DepositStripsAction(int peasantCount, Position depositPosition) {
+		this.peasantCount = peasantCount;
+		this.depositPosition = depositPosition;
 	}
 
 	@Override
 	public boolean preconditionsMet(GameState state) {
-		Position peasantPosition = state.getPeasantPosition(peasantID);
-		Position storagePosition = peasantPosition.move(direction);
-
-		Position townHallPosition = state.getTownHallPosition();
-		PeasantState peasant = state.getPeasant(peasantID);
-
-		if (storagePosition.equals(townHallPosition)
-				&& 0 < peasant.getCargoAmount()) {
-			return true;
-		} else {
+		Collection<PeasantState> peasants = state.getPeasants();
+		// If the deposit site isn't the town hall, false
+		if (!state.getTownHallPosition().equals(depositPosition)) {
 			return false;
 		}
+		// Check that enough peasants are there
+		List<PeasantState> peasantsAtDepositSite = new ArrayList<PeasantState>();
+		for (PeasantState peasant : peasants) {
+			if (peasant.getPosition().chebyshevDistance(depositPosition) <= 1) {
+				peasantsAtDepositSite.add(peasant);
+			}
+		}
+		if (peasantsAtDepositSite.size() < peasantCount) {
+			return false;
+		}
+		// Check that the desired number of peasants have cargo
+		int peasantsWithCargo = 0;
+		for (PeasantState peasant : peasantsAtDepositSite) {
+			if (peasant.getCargoAmount() > 0) {
+				peasantsWithCargo++;
+			}
+		}
+		if (peasantsWithCargo < peasantCount) {
+			return false;
+		}
+		// All good.
+		return true;
 	}
 
 	@Override
@@ -39,6 +57,22 @@ public class DepositStripsAction implements StripsAction {
 	@Override
 	public ActionType getActionType() {
 		return ActionType.DEPOSIT;
+	}
+
+	@Override
+	public int getPeasantCount() {
+		return peasantCount;
+	}
+
+	@Override
+	public int getActionCost() {
+		return 1;
+	}
+
+	@Override
+	public List<Integer> getPeasantIdsForAction(GameState gameState) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

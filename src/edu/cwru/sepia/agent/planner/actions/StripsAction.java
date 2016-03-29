@@ -1,5 +1,7 @@
 package edu.cwru.sepia.agent.planner.actions;
 
+import java.util.List;
+
 import edu.cwru.sepia.agent.planner.GameState;
 
 /**
@@ -47,6 +49,12 @@ public interface StripsAction {
 	public GameState apply(GameState state);
 
 	public ActionType getActionType();
+
+	public int getPeasantCount();
+
+	public int getActionCost();
+
+	public List<Integer> getPeasantIdsForAction(GameState gameState);
 
 	public enum ActionType {
 		MOVE, GATHER, DEPOSIT, BUILD_PEASANT;
