@@ -156,7 +156,7 @@ public class PEAgent extends Agent
       }
       else // Action type is Build Peasant
       {
-        result.put (0, Action.createCompoundBuild (unitid, templateID, x, y));// where to suppy these arguments?
+        result.put (0, Action.createCompoundBuild (unitid, templateID, x, y));// where to supply these arguments?
       }
     }
     return result;
