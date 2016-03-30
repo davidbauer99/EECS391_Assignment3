@@ -9,6 +9,7 @@ import java.util.Stack;
 
 import edu.cwru.sepia.action.Action;
 import edu.cwru.sepia.agent.Agent;
+import edu.cwru.sepia.agent.planner.actions.MoveStripsAction;
 import edu.cwru.sepia.agent.planner.actions.StripsAction;
 import edu.cwru.sepia.agent.planner.actions.StripsAction.ActionType;
 import edu.cwru.sepia.environment.model.history.History;
@@ -131,25 +132,33 @@ public class PEAgent extends Agent
       {
         for (int i = 0; i < peasantsToUse.size (); i++)
         {
-          result.put (i, Action.createCompoundMove (i, x, y));
+          result.put (i, // should this i also be turned into peasantsToUse.get (i)?
+                      Action.createCompoundMove (peasantsToUse.get (i),
+                                                 ((MoveStripsAction) action).getDestination ().getXCoord (),
+                                                 ((MoveStripsAction) action).getDestination ().getYCoord ()));
         }
       }
-      if (actionType == ActionType.GATHER)
+      else if (actionType == ActionType.GATHER)
       {
-
+        for (int i = 0; i < peasantsToUse.size (); i++)
+        {
+          result.put (i, Action.createCompoundGather (peasantsToUse.get (i), targetid));// how to find targetID?;
+        }
       }
-      if (actionType == ActionType.DEPOSIT)
+      else if (actionType == ActionType.DEPOSIT)
       {
-
+        for (int i = 0; i < peasantsToUse.size (); i++)
+        {
+          result.put (peasantsToUse.get (i), Action.createCompoundDeposit (peasantsToUse.get (i), targetid));// how to
+                                                                                                             // find
+                                                                                                             // targetID?
+        }
       }
-      if (actionType == ActionType.BUILD_PEASANT)
+      else // Action type is Build Peasant
       {
-
+        result.put (0, Action.createCompoundBuild (unitid, templateID, x, y));// where to suppy these arguments?
       }
     }
-    // {
-    // create action, store in result
-    // }
     return result;
   }
 
