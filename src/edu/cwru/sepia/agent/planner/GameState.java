@@ -57,13 +57,14 @@ public class GameState implements Comparable<GameState> {
 	private final int xExtent;
 	private final int yExtent;
 	private final GameState parent;
+	private final int townHallID;
 
 	public GameState(int playernum, int requiredGold, int requiredWood,
 			boolean buildPeasants, Map<Integer, PeasantState> peasantStates,
 			List<ResourceState> trees, List<ResourceState> gold,
 			Position townHall, int currentWood, int currentGold,
 			StripsAction previousAction, double cost, int xExtent, int yExtent,
-			GameState parent) {
+			GameState parent, int townHallID) {
 		this.playernum = playernum;
 		this.requiredGold = requiredGold;
 		this.requiredWood = requiredWood;
@@ -79,6 +80,7 @@ public class GameState implements Comparable<GameState> {
 		this.xExtent = xExtent;
 		this.yExtent = yExtent;
 		this.parent = parent;
+		this.townHallID = townHallID;
 	}
 
 	/**
@@ -114,10 +116,12 @@ public class GameState implements Comparable<GameState> {
 				trees.add(new ResourceState(resource));
 			}
 		}
+		int tHallID = 0;
 		for (UnitView unit : state.getUnits(playernum)) {
 			if (unit.getTemplateView().getName().equals("TownHall")) {
 				townHall = new Position(unit.getXPosition(),
 						unit.getYPosition());
+				tHallID = unit.getID();
 			}
 			if (unit.getTemplateView().getName().equals("Peasant")) {
 				peasantStates
@@ -128,6 +132,7 @@ public class GameState implements Comparable<GameState> {
 												.getYPosition())));
 			}
 		}
+		this.townHallID = tHallID;
 		this.currentGold = state
 				.getResourceAmount(playernum, ResourceType.GOLD);
 		this.currentWood = state
@@ -379,7 +384,8 @@ public class GameState implements Comparable<GameState> {
 			return new GameState(playernum, requiredGold, requiredWood,
 					buildPeasants, buildPeasantMap(peasants), trees, gold,
 					townHall, currentWood, currentGold - 400, action, getCost()
-							+ action.getActionCost(), xExtent, yExtent, this);
+							+ action.getActionCost(), xExtent, yExtent, this,
+					townHallID);
 
 			// Has the specified peasants deposit their goods at the TownHall
 		case DEPOSIT:
@@ -405,7 +411,8 @@ public class GameState implements Comparable<GameState> {
 			return new GameState(playernum, requiredGold, requiredWood,
 					buildPeasants, buildPeasantMap(updatedPeasants), trees,
 					gold, townHall, newWood, newGold, deposit, getCost()
-							+ deposit.getActionCost(), xExtent, yExtent, this);
+							+ deposit.getActionCost(), xExtent, yExtent, this,
+					townHallID);
 
 			// Has the specified peasants gather from a given resource
 		case GATHER:
@@ -432,18 +439,18 @@ public class GameState implements Comparable<GameState> {
 			if (resource.getType() == ResourceType.WOOD) {
 				newTrees.remove(resource);
 				newTrees.add(new ResourceState(resource.getPostion(), resource
-						.getType(), remaining));
+						.getType(), remaining, resource.getResourceId()));
 			} else {
 				newGolds.remove(resource);
 				newGolds.add(new ResourceState(resource.getPostion(), resource
-						.getType(), remaining));
+						.getType(), remaining, resource.getResourceId()));
 			}
 
 			return new GameState(playernum, requiredGold, requiredWood,
 					buildPeasants, buildPeasantMap(gatherUpdatedPeasants),
 					newTrees, newGolds, townHall, currentWood, currentGold,
 					gather, getCost() + gather.getActionCost(), xExtent,
-					yExtent, this);
+					yExtent, this, townHallID);
 
 			// Move the specified peasants
 		case MOVE:
@@ -463,10 +470,15 @@ public class GameState implements Comparable<GameState> {
 			return new GameState(playernum, requiredGold, requiredWood,
 					buildPeasants, buildPeasantMap(moveUpdatedPeasants), trees,
 					gold, townHall, currentWood, currentGold, move, getCost()
-							+ move.getActionCost(), xExtent, yExtent, this);
+							+ move.getActionCost(), xExtent, yExtent, this,
+					townHallID);
 		default:
 			throw new RuntimeException("Default reached on switch statement.");
 		}
+	}
+
+	public int getTownHallID() {
+		return townHallID;
 	}
 
 	private Position getValidPositionForNewPeasant() {

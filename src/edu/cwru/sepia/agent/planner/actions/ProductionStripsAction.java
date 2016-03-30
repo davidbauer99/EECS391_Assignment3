@@ -51,6 +51,8 @@ public class ProductionStripsAction implements StripsAction {
 
 	@Override
 	public List<Integer> getPeasantIdsForAction(GameState gameState) {
-		return new ArrayList<Integer>();
+		List<Integer> list = new ArrayList<Integer>();
+		list.add(gameState.getTownHallID());
+		return list;
 	}
 }

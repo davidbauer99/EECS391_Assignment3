@@ -9,11 +9,14 @@ public class ResourceState {
 	private final Position postion;
 	private final ResourceType type;
 	private int remaining;
+	private final int resourceId;
 
-	public ResourceState(Position postion, ResourceType type, int remaining) {
+	public ResourceState(Position postion, ResourceType type, int remaining,
+			int resourceId) {
 		this.postion = postion;
 		this.type = type;
 		this.remaining = remaining;
+		this.resourceId = resourceId;
 	}
 
 	public ResourceState(ResourceView resource) {
@@ -21,6 +24,11 @@ public class ResourceState {
 				resource.getYPosition());
 		this.type = convertType(resource.getType());
 		this.remaining = resource.getAmountRemaining();
+		this.resourceId = resource.getID();
+	}
+
+	public int getResourceId() {
+		return resourceId;
 	}
 
 	private ResourceType convertType(Type type2) {

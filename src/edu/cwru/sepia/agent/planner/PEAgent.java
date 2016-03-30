@@ -2,12 +2,16 @@ package edu.cwru.sepia.agent.planner;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Stack;
 
 import edu.cwru.sepia.action.Action;
+import edu.cwru.sepia.action.ActionFeedback;
+import edu.cwru.sepia.action.ActionResult;
 import edu.cwru.sepia.agent.Agent;
 import edu.cwru.sepia.agent.planner.actions.MoveStripsAction;
 import edu.cwru.sepia.agent.planner.actions.StripsAction;
@@ -34,13 +38,18 @@ public class PEAgent extends Agent
   private Map <Integer, Integer> peasantIdMap;
   private int townhallId;
   private int peasantTemplateId;
+  private int requiredGold;
+  private int requiredWood;
+  private boolean buildPeasants;
 
-  public PEAgent (int playernum, Stack <StripsAction> plan)
+  public PEAgent (int playernum, Stack <StripsAction> plan, int requiredWood, int requiredGold, boolean buildPeasants)
   {
     super (playernum);
     peasantIdMap = new HashMap <Integer, Integer> ();
     this.plan = plan;
-
+    this.requiredGold = requiredGold;
+    this.requiredWood = requiredWood;
+    this.buildPeasants = buildPeasants;
   }
 
   @Override
@@ -106,11 +115,59 @@ public class PEAgent extends Agent
   @Override
   public Map <Integer, Action> middleStep (State.StateView stateView, History.HistoryView historyView)
   {
-    // TODO: Implement me!
+    List <Integer> busyIDs = new ArrayList <Integer> ();
+    Map <Integer, ActionResult> actionResults = historyView.getCommandFeedback (playernum,
+                                                                                stateView.getTurnNumber () - 1);
+
+    for (Entry <Integer, ActionResult> resEntry : actionResults.entrySet ())
+    {
+      if (resEntry.getValue ().getFeedback () == ActionFeedback.INCOMPLETE)
+      {
+        busyIDs.add (resEntry.getKey ());
+      }
+    }
+
     HashMap <Integer, Action> result = new HashMap <Integer, Action> ();
-    // result.put(integer i, action a)
-    return null;
+    StripsAction nextAction = plan.peek ();
+    GameState state = new GameState (stateView, playernum, requiredGold, requiredWood, buildPeasants);
+    while (actionCanHappen (nextAction, busyIDs, state))
+    {
+      plan.pop ();
+      Map <Integer, Action> sepiaActions = createSepiaAction (nextAction, state);
+      busyIDs.addAll (sepiaActions.keySet ());
+      for (Entry <Integer, Action> entries : sepiaActions.entrySet ())
+      {
+        result.put (entries.getKey (), entries.getValue ());
+      }
+      nextAction = plan.peek ();
+    }
+    return result;
   }
+
+  private boolean actionCanHappen (StripsAction nextAction, List <Integer> busyIDs, GameState state)
+  {
+    if (nextAction == null)
+    {
+      return false;
+    }
+    else if (!nextAction.preconditionsMet (state))
+    {
+      return false;
+    }
+    else
+    {
+      for (Integer id : nextAction.getPeasantIdsForAction (state))
+      {
+        if (busyIDs.contains (id))
+        {
+          return false;
+        }
+      }
+      return true;
+    }
+  }
+
+  boolean first = true;
 
   /**
    * Returns a SEPIA version of the specified Strips Action.
@@ -122,7 +179,8 @@ public class PEAgent extends Agent
   private Map <Integer, Action> createSepiaAction (StripsAction action, GameState gameState)
   {// make it also take a gamestate
     HashMap <Integer, Action> result = new HashMap <Integer, Action> ();
-    boolean precons = action.preconditionsMet (gameState);// check for preconditions
+    boolean precons = action.preconditionsMet (gameState);// check for
+    // preconditions
     if (precons)
     {
       List <Integer> peasantsToUse = action.getPeasantIdsForAction (gameState);
@@ -132,7 +190,8 @@ public class PEAgent extends Agent
       {
         for (int i = 0; i < peasantsToUse.size (); i++)
         {
-          result.put (i, // should this i also be turned into peasantsToUse.get (i)?
+          result.put (i, // should this i also be turned into
+                      // peasantsToUse.get (i)?
                       Action.createCompoundMove (peasantsToUse.get (i),
                                                  ((MoveStripsAction) action).getDestination ().getXCoord (),
                                                  ((MoveStripsAction) action).getDestination ().getYCoord ()));
@@ -142,7 +201,8 @@ public class PEAgent extends Agent
       {
         for (int i = 0; i < peasantsToUse.size (); i++)
         {
-          result.put (i, Action.createCompoundGather (peasantsToUse.get (i), targetid));// how to find targetID?;
+          result.put (i, Action.createCompoundGather (peasantsToUse.get (i), targetid));// how to find
+          // targetID?;
         }
       }
       else if (actionType == ActionType.DEPOSIT)
@@ -150,13 +210,17 @@ public class PEAgent extends Agent
         for (int i = 0; i < peasantsToUse.size (); i++)
         {
           result.put (peasantsToUse.get (i), Action.createCompoundDeposit (peasantsToUse.get (i), targetid));// how to
-                                                                                                             // find
-                                                                                                             // targetID?
+          // find
+          // targetID?
         }
       }
       else // Action type is Build Peasant
       {
-        result.put (0, Action.createCompoundBuild (unitid, templateID, x, y));// where to supply these arguments?
+        result.put (0, Action.createCompoundBuild (unitid, templateID, x, y));// where
+        // to
+        // suppy
+        // these
+        // arguments?
       }
     }
     return result;
