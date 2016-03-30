@@ -13,7 +13,9 @@ import edu.cwru.sepia.action.Action;
 import edu.cwru.sepia.action.ActionFeedback;
 import edu.cwru.sepia.action.ActionResult;
 import edu.cwru.sepia.agent.Agent;
+import edu.cwru.sepia.agent.planner.actions.MoveStripsAction;
 import edu.cwru.sepia.agent.planner.actions.StripsAction;
+import edu.cwru.sepia.agent.planner.actions.StripsAction.ActionType;
 import edu.cwru.sepia.environment.model.history.History;
 import edu.cwru.sepia.environment.model.state.State;
 import edu.cwru.sepia.environment.model.state.Template;
@@ -130,7 +132,8 @@ public class PEAgent extends Agent {
 				requiredWood, buildPeasants);
 		while (actionCanHappen(nextAction, busyIDs, state)) {
 			plan.pop();
-			Map<Integer, Action> sepiaActions = createSepiaAction(nextAction);
+			Map<Integer, Action> sepiaActions = createSepiaAction(nextAction,
+					state);
 			busyIDs.addAll(sepiaActions.keySet());
 			for (Entry<Integer, Action> entries : sepiaActions.entrySet()) {
 				result.put(entries.getKey(), entries.getValue());
@@ -165,13 +168,50 @@ public class PEAgent extends Agent {
 	 *            StripsAction
 	 * @return SEPIA representation of same action
 	 */
-	private Action createSepiaAction(StripsAction action) {
-		Action result = null;
-		// check for preconditions
-		// if (preconds == true)
-		// {
-		// create action, store in result
-		// }
+	private Map<Integer, Action> createSepiaAction(StripsAction action,
+			GameState gameState) {// make it also take a gamestate
+		HashMap<Integer, Action> result = new HashMap<Integer, Action>();
+		boolean precons = action.preconditionsMet(gameState);// check for
+																// preconditions
+		if (precons) {
+			List<Integer> peasantsToUse = action
+					.getPeasantIdsForAction(gameState);
+			ActionType actionType = action.getActionType();
+
+			if (actionType == ActionType.MOVE) {
+				for (int i = 0; i < peasantsToUse.size(); i++) {
+					result.put(i, // should this i also be turned into
+									// peasantsToUse.get (i)?
+							Action.createCompoundMove(peasantsToUse.get(i),
+									((MoveStripsAction) action)
+											.getDestination().getXCoord(),
+									((MoveStripsAction) action)
+											.getDestination().getYCoord()));
+				}
+			} else if (actionType == ActionType.GATHER) {
+				for (int i = 0; i < peasantsToUse.size(); i++) {
+					result.put(i, Action.createCompoundGather(
+							peasantsToUse.get(i), targetid));// how to find
+																// targetID?;
+				}
+			} else if (actionType == ActionType.DEPOSIT) {
+				for (int i = 0; i < peasantsToUse.size(); i++) {
+					result.put(peasantsToUse.get(i), Action
+							.createCompoundDeposit(peasantsToUse.get(i),
+									targetid));// how to
+												// find
+												// targetID?
+				}
+			} else // Action type is Build Peasant
+			{
+				result.put(0,
+						Action.createCompoundBuild(unitid, templateID, x, y));// where
+																				// to
+																				// suppy
+																				// these
+																				// arguments?
+			}
+		}
 		return result;
 	}
 
