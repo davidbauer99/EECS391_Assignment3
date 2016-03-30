@@ -253,8 +253,8 @@ public class GameState implements Comparable<GameState> {
 	public double heuristic() {
 		int hVal = 0;
 
-		// Peasants take 400 gold and a lot of movements
-		hVal += (desiredPeasantNumber() - peasantStates.size()) * 8 + 7 * 8;
+		// Same weight per peasant as 4 gold runs
+		hVal += (desiredPeasantNumber() - peasantStates.size()) * 15 * 4;
 
 		// Number of times a peasant must complete a move-gather-move-deposit
 		// cycle to gather the remaining gold. Assume that the peasants from the

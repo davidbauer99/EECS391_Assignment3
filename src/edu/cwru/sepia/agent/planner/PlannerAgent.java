@@ -45,7 +45,7 @@ public class PlannerAgent extends Agent {
 
 		System.out.println("required gold: " + requiredGold
 				+ " required wood: " + requiredWood + " build Peasants: "
-				+ false);
+				+ buildPeasants);
 	}
 
 	@Override
