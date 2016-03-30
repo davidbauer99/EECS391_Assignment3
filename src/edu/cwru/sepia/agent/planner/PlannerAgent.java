@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -40,13 +39,12 @@ public class PlannerAgent extends Agent {
 					.println("You must specify the required wood and gold amounts and whether peasants should be built");
 		}
 
-		requiredWood = Integer.parseInt(params[0]);
-		requiredGold = Integer.parseInt(params[1]);
+		requiredGold = 0;// Integer.parseInt(params[0]);
+		requiredWood = 400; // Integer.parseInt(params[1]);
 		buildPeasants = Boolean.parseBoolean(params[2]);
 
-		System.out.println("required wood: " + requiredWood
-				+ " required gold: " + requiredGold + " build Peasants: "
-				+ buildPeasants);
+		System.out.println("required gold: " + 0 + " required wood: " + 400
+				+ " build Peasants: " + false);
 	}
 
 	@Override
@@ -110,49 +108,58 @@ public class PlannerAgent extends Agent {
 	 * @return The plan or null if no plan is found.
 	 */
 	private Stack<StripsAction> AstarSearch(GameState startState) {
-		GameState start = startState;
+		PriorityQueue<GameState> open = new PriorityQueue<GameState>();
+		Set<GameState> closed = new HashSet<GameState>();
 
-		// Create the open and closed list
-		PriorityQueue<GameState> openList = new PriorityQueue<GameState>();
-		Set<GameState> closedList = new HashSet<GameState>();
-		// Add the current location to the open list
-		openList.add(start);
-		GameState currentState = openList.poll();
+		// Initialize the first state and the priority queue
+		open.add(startState);
 
-		while (currentState != null) {
-			System.out.println(currentState.getCurrentGold() + " "
-					+ currentState.getCurrentWood() + " "
-					+ currentState.getPeasants().size());
-			// If the current location is the goal, build the path
-			if (currentState.isGoal()) {
-				return buildPath(currentState, start);
+		while (!open.isEmpty()) {
+
+			GameState current = open.poll();
+
+			// check to skip this action if it has been done
+			if (closed.contains(current)) {
+				continue;
 			}
-			// Get the neighbors that are on the map and not obstacles
-			Collection<GameState> children = currentState.generateChildren();
-			// Check each neighbor
-			for (GameState state : children) {
-				// If a better path to this node is in the open list, skip it
-				if (existsWithLowerCost(openList, state)) {
-					continue;
-				}
-				// If already in closed set
-				if (closedList.contains(state)) {
-					continue;
-				}
-				// Remove this node from any list that may contain it
-				closedList.remove(state);
-				openList.remove(state);
-				// Add it to the open list
-				openList.add(state);
+			System.out.println(current.getCurrentGold() + " "
+					+ current.getCurrentWood() + " "
+					+ current.getPeasants().size());
+			// Build the least cost path when the goal or depth is met
+			if (current.isGoal()) {
+				Stack<StripsAction> aStarPath = buildPath(current, startState);
+				return aStarPath;
 			}
-			// Mark currentState as having been searched
-			closedList.add(currentState);
-			// Move to the next best node
-			currentState = openList.poll();
+
+			// The expanded state is now in the closed set
+			closed.add(current);
+
+			// Generate the children of this game state to evaluate all possible
+			// next actions
+			for (GameState neighbor : current.generateChildren()) {
+
+				// We cannot operate on game states that are closed
+				if (!closed.contains(neighbor)) {
+
+					// Calculate a new score based on the cost from start and
+					// the make span
+					// of the neighbor's parent STRIPS action.
+					int tentativeScore = (int) neighbor.getCost();
+
+					// We expand the nodes with lower cost than previously
+					// visited nodes
+					if (!open.contains(neighbor)
+							|| tentativeScore < neighbor.getCost()) {
+
+						// Add the neighbor to the open queue
+						open.add(neighbor);
+					}
+				}
+			}
 		}
-		// If the closed list is empty, then there is no path
-		System.out.println("No available path.");
-		System.exit(0);
+
+		// need to inform there is not path
+		System.err.print("No available path");
 		return null;
 	}
 

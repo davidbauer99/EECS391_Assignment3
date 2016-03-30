@@ -9,6 +9,7 @@ import edu.cwru.sepia.agent.planner.GameState;
 import edu.cwru.sepia.agent.planner.PeasantState;
 import edu.cwru.sepia.agent.planner.Position;
 import edu.cwru.sepia.agent.planner.ResourceState;
+import edu.cwru.sepia.environment.model.state.ResourceType;
 
 public class GatherStripsAction implements StripsAction {
 
@@ -47,6 +48,18 @@ public class GatherStripsAction implements StripsAction {
 		ResourceState resource = state.getResourceByPosition(gatherPosition);
 		if (resource.getRemaining() < peasantCount * 100) {
 			return false;
+		}
+
+		if (resource.getType() == ResourceType.WOOD) {
+			if (state.getRequiredWood() < state.getCurrentWood() + 100
+					* peasantCount) {
+				return false;
+			}
+		} else {
+			if (state.getRequiredGold() < state.getCurrentGold() + 100
+					* peasantCount) {
+				return false;
+			}
 		}
 
 		// If the right number of peasants are there and able to gather, check
@@ -110,6 +123,18 @@ public class GatherStripsAction implements StripsAction {
 			return new ArrayList<Integer>();
 		}
 
+		if (resource.getType() == ResourceType.WOOD) {
+			if (state.getRequiredWood() < state.getCurrentWood() + 100
+					* peasantCount) {
+				return new ArrayList<Integer>();
+			}
+		} else {
+			if (state.getRequiredGold() < state.getCurrentGold() + 100
+					* peasantCount) {
+				return new ArrayList<Integer>();
+			}
+		}
+
 		// If the right number of peasants are there and able to gather, check
 		// that this is a valid gather location
 		List<Integer> ids = new ArrayList<Integer>();
@@ -117,5 +142,34 @@ public class GatherStripsAction implements StripsAction {
 		peasantsAtResource.stream().limit(peasantCount)
 				.forEach(p -> ids.add(p.getId()));
 		return ids;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((gatherPosition == null) ? 0 : gatherPosition.hashCode());
+		result = prime * result + peasantCount;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		GatherStripsAction other = (GatherStripsAction) obj;
+		if (gatherPosition == null) {
+			if (other.gatherPosition != null)
+				return false;
+		} else if (!gatherPosition.equals(other.gatherPosition))
+			return false;
+		if (peasantCount != other.peasantCount)
+			return false;
+		return true;
 	}
 }

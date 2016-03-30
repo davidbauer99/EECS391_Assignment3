@@ -36,6 +36,20 @@ public class ProductionStripsAction implements StripsAction {
 	}
 
 	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof ProductionStripsAction) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return 1;
+	}
+
+	@Override
 	public List<Integer> getPeasantIdsForAction(GameState gameState) {
 		return new ArrayList<Integer>();
 	}
