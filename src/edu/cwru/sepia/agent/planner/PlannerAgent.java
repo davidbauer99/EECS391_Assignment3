@@ -39,12 +39,13 @@ public class PlannerAgent extends Agent {
 					.println("You must specify the required wood and gold amounts and whether peasants should be built");
 		}
 
-		requiredGold = 0;// Integer.parseInt(params[0]);
-		requiredWood = 400; // Integer.parseInt(params[1]);
+		requiredGold = Integer.parseInt(params[0]);
+		requiredWood = Integer.parseInt(params[1]);
 		buildPeasants = Boolean.parseBoolean(params[2]);
 
-		System.out.println("required gold: " + 0 + " required wood: " + 400
-				+ " build Peasants: " + false);
+		System.out.println("required gold: " + requiredGold
+				+ " required wood: " + requiredWood + " build Peasants: "
+				+ false);
 	}
 
 	@Override
@@ -108,51 +109,35 @@ public class PlannerAgent extends Agent {
 	 * @return The plan or null if no plan is found.
 	 */
 	private Stack<StripsAction> AstarSearch(GameState startState) {
-		PriorityQueue<GameState> open = new PriorityQueue<GameState>();
-		Set<GameState> closed = new HashSet<GameState>();
+		PriorityQueue<GameState> openList = new PriorityQueue<GameState>();
+		Set<GameState> closedList = new HashSet<GameState>();
 
-		// Initialize the first state and the priority queue
-		open.add(startState);
+		openList.add(startState);
 
-		while (!open.isEmpty()) {
-
-			GameState current = open.poll();
-
-			// check to skip this action if it has been done
-			if (closed.contains(current)) {
+		while (!openList.isEmpty()) {
+			GameState current = openList.poll();
+			if (closedList.contains(current)) {
 				continue;
 			}
-			System.out.println(current.getCurrentGold() + " "
-					+ current.getCurrentWood() + " "
-					+ current.getPeasants().size());
-			// Build the least cost path when the goal or depth is met
+			// System.out.println(current.getCurrentGold() + " "
+			// + current.getCurrentWood() + " "
+			// + current.getPeasants().size());
+
+			// If at the goal, build the path
 			if (current.isGoal()) {
 				Stack<StripsAction> aStarPath = buildPath(current, startState);
 				return aStarPath;
 			}
-
-			// The expanded state is now in the closed set
-			closed.add(current);
-
-			// Generate the children of this game state to evaluate all possible
-			// next actions
+			// Add to closed set
+			closedList.add(current);
 			for (GameState neighbor : current.generateChildren()) {
-
-				// We cannot operate on game states that are closed
-				if (!closed.contains(neighbor)) {
-
-					// Calculate a new score based on the cost from start and
-					// the make span
-					// of the neighbor's parent STRIPS action.
-					int tentativeScore = (int) neighbor.getCost();
-
-					// We expand the nodes with lower cost than previously
-					// visited nodes
-					if (!open.contains(neighbor)
-							|| tentativeScore < neighbor.getCost()) {
-
+				// Skip if already evaluated
+				if (!closedList.contains(neighbor)) {
+					// If it doesn't exist with a lower cost already
+					if (!existsWithLowerCost(openList, neighbor)) {
+						openList.remove(neighbor);
 						// Add the neighbor to the open queue
-						open.add(neighbor);
+						openList.add(neighbor);
 					}
 				}
 			}

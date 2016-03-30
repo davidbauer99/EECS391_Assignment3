@@ -48,12 +48,36 @@ public interface StripsAction {
 	 */
 	public GameState apply(GameState state);
 
+	/**
+	 * Returns the type associated with this action.
+	 * 
+	 * @return an ActionType
+	 */
 	public ActionType getActionType();
 
+	/**
+	 * Gets the number of peasants that are used to complete this action.
+	 * 
+	 * @return an int representing the number of peasants needed.
+	 */
 	public int getPeasantCount();
 
+	/**
+	 * Gets the number of primitive actions that are needed to complete this
+	 * action.
+	 * 
+	 * @return an int representing the number of primitive actions needed for
+	 *         this action.
+	 */
 	public int getActionCost();
 
+	/**
+	 * Gets the IDs of peasants that are able to complete this action.
+	 * 
+	 * @param gameState
+	 *            the state from which to extract IDs.
+	 * @return a List containing peasant IDs
+	 */
 	public List<Integer> getPeasantIdsForAction(GameState gameState);
 
 	public enum ActionType {

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import edu.cwru.sepia.agent.planner.actions.DepositStripsAction;
 import edu.cwru.sepia.agent.planner.actions.GatherStripsAction;
@@ -162,25 +163,32 @@ public class GameState implements Comparable<GameState> {
 	 */
 	public List<GameState> generateChildren() {
 		List<StripsAction> actions = new ArrayList<StripsAction>();
+		// For each possible peasant count
 		for (int i = 1; i <= optimalPeasantCount(); i++) {
+			// Create a movement to/from and gather for each resource
 			for (Position resource : getAllResourcePositions()) {
 				actions.add(new MoveStripsAction(i, townHall, resource));
 				actions.add(new MoveStripsAction(i, resource, townHall));
 				actions.add(new GatherStripsAction(i, resource));
 			}
+			// Have i peasants deposit at the townhall
 			actions.add(new DepositStripsAction(i, townHall));
 		}
+		// Build a peasant
 		actions.add(new ProductionStripsAction());
 		List<GameState> children = new ArrayList<GameState>();
+		// Filter actions that have not met preonditions then create children
+		// states
 		actions.stream().filter((a) -> a.preconditionsMet(this))
 				.forEach((a) -> children.add(a.apply(this)));
-		children.get(0);
 		return children;
 	}
 
-	private Collection<ResourceState> getAllResourcePositions() {
-		// TODO Auto-generated method stub
-		return null;
+	private Collection<Position> getAllResourcePositions() {
+		Set<Position> positions = new HashSet<Position>();
+		trees.stream().forEach(t -> positions.add(t.getPostion()));
+		gold.stream().forEach(t -> positions.add(t.getPostion()));
+		return positions;
 	}
 
 	/**
@@ -238,135 +246,27 @@ public class GameState implements Comparable<GameState> {
 	 *         this state.
 	 */
 	public double heuristic() {
-		// if (isGoal()) {
-		// return 0;
-		// }
-		// // remaining gold to collect, including that needed to build peasants
-		// int goldOutstanding = Math.max(0, requiredGold - currentGold)
-		// + (400 * (optimalPeasantCount() - peasantStates.size()));
-		// // remaining wood to collect
-		// int woodOutstanding = Math.max(0, requiredWood - currentWood);
-		// int goldInProgress = 0;
-		// int woodInProgress = 0;
-		// double actionsNeeded = 0;
-		// for (PeasantState peasant : peasantStates.values()) {
-		// if (woodOutstanding + goldOutstanding == 0) {
-		// break;
-		// }
-		// // account for peasants that can deposit next turn
-		// if (peasant.getPosition().chebyshevDistance(townHall) == 1
-		// && peasant.getCargoAmount() != 0) {
-		// switch (peasant.getCargoType()) {
-		// case GOLD:
-		// goldOutstanding -= 100;
-		// actionsNeeded++;
-		// break;
-		// case WOOD:
-		// woodOutstanding -= 100;
-		// actionsNeeded++;
-		// break;
-		// default:
-		// break;
-		// }
-		// } else if (peasant.getCargoAmount() > 0) {
-		// // Peasants with resources but not at townhall have to move then
-		// // deposit
-		// switch (peasant.getCargoType()) {
-		// case GOLD:
-		// goldOutstanding -= 100;
-		// actionsNeeded += 1;
-		// actionsNeeded += peasant.getPosition().chebyshevDistance(
-		// townHall) - 1;
-		// break;
-		// case WOOD:
-		// woodOutstanding -= 100;
-		// actionsNeeded += 1;
-		// actionsNeeded += peasant.getPosition().chebyshevDistance(
-		// townHall) - 1;
-		// break;
-		// default:
-		// break;
-		// }
-		// } else if (getClosestResource(peasant.getPosition()).getPostion()
-		// .chebyshevDistance(peasant.getPosition()) == 1) {
-		// ResourceState res = getClosestResource(peasant.getPosition());
-		// switch (res.getType()) {
-		// case GOLD:
-		// goldOutstanding -= 100;
-		// goldInProgress++;
-		// actionsNeeded += 2;
-		// actionsNeeded += peasant.getPosition().chebyshevDistance(
-		// townHall) - 1;
-		// break;
-		// case WOOD:
-		// woodOutstanding -= 100;
-		// woodInProgress++;
-		// actionsNeeded += 2;
-		// actionsNeeded += peasant.getPosition().chebyshevDistance(
-		// townHall) - 1;
-		// break;
-		// default:
-		// break;
-		// }
-		// }
-		// }
-		//
-		// int resourcesOutstanding = Math.max(0, goldOutstanding)
-		// + Math.max(0, woodOutstanding);
-		// int cyclesNeeded = ((resourcesOutstanding / 100));
-		// cyclesNeeded = (cyclesNeeded / 2)
-		// * townHall.chebyshevDistance(getClosestResource(townHall)
-		// .getPostion());
-		// actionsNeeded += cyclesNeeded;
-		// actionsNeeded = actionsNeeded / peasantStates.size();
-		// return actionsNeeded;
+		int hVal = 0;
 
-		int heuristic = 0;
+		// Peasants take 400 gold and a lot of movements
+		hVal += (desiredPeasantNumber() - peasantStates.size()) * 8 + 7 * 8;
 
-		// Make peasants a priority
-		heuristic += (desiredPeasantNumber() - peasantStates.size()) * 500;
-
-		// Determine the # of cycles needed to gather gold
-		int goldCycles = Math.max(0, requiredGold - currentGold)
+		// Number of times a peasant must complete a move-gather-move-deposit
+		// cycle to gather the remaining gold. Assume that the peasants from the
+		// previous action will work in harmony.
+		int goldRuns = Math.max(0, requiredGold - currentGold)
 				/ (100 * Math.max(1, previousAction.getPeasantCount()));
 
-		// Determine the # of cycles needed to gather wood
-		int woodCycles = Math.max(0, requiredWood - currentWood)
+		// Number of times a peasant must complete a move-gather-move-deposit
+		// cycle to gather the remaining wood. Assume that the peasants from the
+		// previous action will work in harmony.
+		int woodRuns = Math.max(0, requiredWood - currentWood)
 				/ (100 * Math.max(1, previousAction.getPeasantCount()));
 
-		// Choose 30 steps to be the distance from a resource
-		heuristic += 60 * (goldCycles + woodCycles);
+		// Estimate ~7 steps to be the distance from a resource
+		hVal += 15 * (goldRuns + woodRuns);
 
-		// Factor in the amount of wood in order to find the goal state
-		// faster.
-		// heuristic -= 1000;
-
-		return heuristic;
-	}
-
-	private ResourceState getShortestDistResource(List<ResourceState> treeCopy) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private ResourceState getClosestResource(Position position) {
-		int minDist = Integer.MAX_VALUE;
-		ResourceState closest = null;
-		for (ResourceState res : trees) {
-			if (closest == null
-					|| position.chebyshevDistance(res.getPostion()) < minDist) {
-				closest = res;
-				minDist = position.chebyshevDistance(res.getPostion());
-			}
-		}
-		for (ResourceState res : gold) {
-			if (closest == null
-					|| position.chebyshevDistance(res.getPostion()) < minDist) {
-				closest = res;
-				minDist = position.chebyshevDistance(res.getPostion());
-			}
-		}
-		return closest;
+		return hVal;
 	}
 
 	public StripsAction getPreviousAction() {
@@ -446,6 +346,11 @@ public class GameState implements Comparable<GameState> {
 		return yExtent;
 	}
 
+	/**
+	 * Gets all positions that are occupied by a resource, townhall or peasant.
+	 * 
+	 * @return A List containing Positions of occupied spaces.
+	 */
 	public List<Position> getOccupiedPositions() {
 		List<Position> allPositions = new ArrayList<Position>();
 		for (ResourceState state : trees) {
@@ -463,6 +368,7 @@ public class GameState implements Comparable<GameState> {
 
 	public GameState applyAction(StripsAction stripsAction) {
 		switch (stripsAction.getActionType()) {
+		// Adds a new peasant and deducts 400 gold
 		case BUILD_PEASANT:
 			ProductionStripsAction action = (ProductionStripsAction) stripsAction;
 			int newID = getValidIDForNewPeasant();
@@ -474,20 +380,25 @@ public class GameState implements Comparable<GameState> {
 					buildPeasants, buildPeasantMap(peasants), trees, gold,
 					townHall, currentWood, currentGold - 400, action, getCost()
 							+ action.getActionCost(), xExtent, yExtent, this);
+
+			// Has the specified peasants deposit their goods at the TownHall
 		case DEPOSIT:
 			DepositStripsAction deposit = (DepositStripsAction) stripsAction;
 			List<Integer> ids = deposit.getPeasantIdsForAction(this);
 			Collection<PeasantState> updatedPeasants = getPeasants();
 			int newWood = currentWood;
 			int newGold = currentGold;
+			// For each peasant
 			for (Integer id : ids) {
 				PeasantState peasant = getPeasant(id);
 				updatedPeasants.remove(peasant);
+				// Incremennt the wood or gold
 				if (peasant.getCargoType() == ResourceType.WOOD) {
 					newWood += peasant.getCargoAmount();
 				} else if (peasant.getCargoType() == ResourceType.GOLD) {
 					newGold += peasant.getCargoAmount();
 				}
+				// Update the peasant to have no cargo
 				updatedPeasants.add(new PeasantState(id, 0, null, peasant
 						.getPosition()));
 			}
@@ -495,6 +406,8 @@ public class GameState implements Comparable<GameState> {
 					buildPeasants, buildPeasantMap(updatedPeasants), trees,
 					gold, townHall, newWood, newGold, deposit, getCost()
 							+ deposit.getActionCost(), xExtent, yExtent, this);
+
+			// Has the specified peasants gather from a given resource
 		case GATHER:
 			GatherStripsAction gather = (GatherStripsAction) stripsAction;
 			List<Integer> gatherIds = gather.getPeasantIdsForAction(this);
@@ -502,16 +415,20 @@ public class GameState implements Comparable<GameState> {
 			ResourceState resource = getResourceByPosition(gather
 					.getResourcePosition());
 			int remaining = resource.getRemaining();
+			// For each peasant
 			for (Integer id : gatherIds) {
 				PeasantState peasant = getPeasant(id);
 				gatherUpdatedPeasants.remove(peasant);
+				// decrement resources remaining count
 				remaining -= 100;
+				// Add new peasant with cargo
 				gatherUpdatedPeasants.add(new PeasantState(id, 100, resource
 						.getType(), peasant.getPosition()));
 			}
 
 			List<ResourceState> newTrees = getTreeCopy();
 			List<ResourceState> newGolds = getGoldCopy();
+			// Update the resource
 			if (resource.getType() == ResourceType.WOOD) {
 				newTrees.remove(resource);
 				newTrees.add(new ResourceState(resource.getPostion(), resource
@@ -527,14 +444,18 @@ public class GameState implements Comparable<GameState> {
 					newTrees, newGolds, townHall, currentWood, currentGold,
 					gather, getCost() + gather.getActionCost(), xExtent,
 					yExtent, this);
+
+			// Move the specified peasants
 		case MOVE:
 			MoveStripsAction move = (MoveStripsAction) stripsAction;
 			List<Integer> moveIds = move.getPeasantIdsForAction(this);
 			Collection<PeasantState> moveUpdatedPeasants = getPeasants();
 			Position dest = move.getDestination();
+			// For each peasant
 			for (Integer id : moveIds) {
 				PeasantState peasant = getPeasant(id);
 				moveUpdatedPeasants.remove(peasant);
+				// Update the peasant location.
 				moveUpdatedPeasants.add(new PeasantState(id, peasant
 						.getCargoAmount(), peasant.getCargoType(), dest));
 			}
