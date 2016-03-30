@@ -66,7 +66,8 @@ public class PlannerAgent extends Agent {
 		savePlan(plan);
 
 		// Instantiates the PEAgent with the specified plan.
-		peAgent = new PEAgent(playernum, plan);
+		peAgent = new PEAgent(playernum, plan, requiredWood, requiredGold,
+				buildPeasants);
 
 		return peAgent.initialStep(stateView, historyView);
 	}
