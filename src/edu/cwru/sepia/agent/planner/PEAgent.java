@@ -122,6 +122,7 @@ public class PEAgent extends Agent {
 		Map<Integer, ActionResult> actionResults = historyView
 				.getCommandFeedback(playernum, stateView.getTurnNumber() - 1);
 
+		// Mark peasants with incomplete actions as busy
 		for (Entry<Integer, ActionResult> resEntry : actionResults.entrySet()) {
 			if (resEntry.getValue().getFeedback() == ActionFeedback.INCOMPLETE) {
 				busyIDs.add(resEntry.getKey());
@@ -137,23 +138,22 @@ public class PEAgent extends Agent {
 		}
 		GameState state = new GameState(stateView, playernum, requiredGold,
 				requiredWood, buildPeasants);
-		boolean first = true;
+		// If the action can happen
 		while (actionCanHappen(nextAction, busyIDs, state)) {
+			// remvoe from plan
 			plan.pop();
+			// get sepia equivalent
 			Map<Integer, Action> sepiaActions = createSepiaAction(nextAction,
 					state);
+			// mark affected peasants as busy
 			busyIDs.addAll(sepiaActions.keySet());
 			for (Entry<Integer, Action> entries : sepiaActions.entrySet()) {
 				result.put(entries.getKey(), entries.getValue());
 			}
 
-			if (!first) {
-				System.out.println(result.toString());
-			}
-
 			try {
+				// attempt to add the next action if it can be done in parallel
 				nextAction = plan.peek();
-				first = false;
 			} catch (EmptyStackException e) {
 				break;
 			}
@@ -161,13 +161,19 @@ public class PEAgent extends Agent {
 		return result;
 	}
 
+	// Returns true if the action can be completed based on the peasants that
+	// are busy and the current Game state
 	private boolean actionCanHappen(StripsAction nextAction,
 			List<Integer> busyIDs, GameState state) {
+		// null actions are bad
 		if (nextAction == null) {
 			return false;
+			// if the preconditions are not met then it can't be done
 		} else if (!nextAction.preconditionsMet(state)) {
 			return false;
 		} else {
+			// if the peasants needed for the action are busy then do not do
+			// action
 			for (Integer id : nextAction.getPeasantIdsForAction(state)) {
 				if (busyIDs.contains(id)) {
 					return false;
@@ -176,8 +182,6 @@ public class PEAgent extends Agent {
 			return true;
 		}
 	}
-
-	boolean first = true;
 
 	/**
 	 * Returns a SEPIA version of the specified Strips Action.
@@ -198,14 +202,11 @@ public class PEAgent extends Agent {
 
 			if (actionType == ActionType.MOVE) {
 				for (int i = 0; i < peasantsToUse.size(); i++) {
-					result.put(peasantsToUse.get(i), // should this i also be
-														// turned into
-							// peasantsToUse.get (i)?
-							Action.createCompoundMove(peasantsToUse.get(i),
-									((MoveStripsAction) action)
-											.getDestination().getXCoord(),
-									((MoveStripsAction) action)
-											.getDestination().getYCoord()));
+					MoveStripsAction move = (MoveStripsAction) action;
+					Action m = Action.createCompoundMove(peasantsToUse.get(i),
+							move.getDestination().getXCoord(), move
+									.getDestination().getYCoord());
+					result.put(peasantsToUse.get(i), m);
 				}
 			} else if (actionType == ActionType.GATHER) {
 				for (int i = 0; i < peasantsToUse.size(); i++) {
@@ -216,25 +217,18 @@ public class PEAgent extends Agent {
 							resourcePosition).getResourceId();
 					result.put(peasantsToUse.get(i), Action
 							.createCompoundGather(peasantsToUse.get(i),
-									resourceID));// how to find
-					// targetID?;
+									resourceID));
 				}
 			} else if (actionType == ActionType.DEPOSIT) {
 				for (int i = 0; i < peasantsToUse.size(); i++) {
 					result.put(peasantsToUse.get(i), Action
 							.createCompoundDeposit(peasantsToUse.get(i),
-									townhallId));// how to
-					// find
-					// targetID?
+									townhallId));
 				}
-			} else // Action type is Build Peasant
-			{
+			} else {
+				// Action type is Build Peasant
 				result.put(townhallId, Action.createCompoundProduction(
-						townhallId, peasantTemplateId)); // where
-				// to
-				// suppy
-				// these
-				// arguments?
+						townhallId, peasantTemplateId));
 			}
 		}
 		return result;

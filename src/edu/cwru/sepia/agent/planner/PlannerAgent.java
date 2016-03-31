@@ -54,7 +54,6 @@ public class PlannerAgent extends Agent {
 
 		Stack<StripsAction> plan = AstarSearch(new GameState(stateView,
 				playernum, requiredGold, requiredWood, buildPeasants));
-		System.out.println("FINISHED");
 
 		if (plan == null) {
 			System.err.println("No plan was found");
@@ -120,9 +119,6 @@ public class PlannerAgent extends Agent {
 			if (closedList.contains(current)) {
 				continue;
 			}
-			// System.out.println(current.getCurrentGold() + " "
-			// + current.getCurrentWood() + " "
-			// + current.getPeasants().size());
 
 			// If at the goal, build the path
 			if (current.isGoal()) {
@@ -144,8 +140,6 @@ public class PlannerAgent extends Agent {
 			}
 		}
 
-		// need to inform there is not path
-		System.err.print("No available path");
 		return null;
 	}
 
