@@ -125,11 +125,11 @@ public class GameState implements Comparable<GameState> {
 			}
 			if (unit.getTemplateView().getName().equals("Peasant")) {
 				peasantStates
-						.put(unit.getID(),
-								new PeasantState(unit.getID(), unit
-										.getCargoAmount(), unit.getCargoType(),
-										new Position(unit.getXPosition(), unit
-												.getYPosition())));
+				.put(unit.getID(),
+						new PeasantState(unit.getID(), unit
+								.getCargoAmount(), unit.getCargoType(),
+								new Position(unit.getXPosition(), unit
+										.getYPosition())));
 			}
 		}
 		this.townHallID = tHallID;
@@ -185,7 +185,7 @@ public class GameState implements Comparable<GameState> {
 		// Filter actions that have not met preonditions then create children
 		// states
 		actions.stream().filter((a) -> a.preconditionsMet(this))
-				.forEach((a) -> children.add(a.apply(this)));
+		.forEach((a) -> children.add(a.apply(this)));
 		return children;
 	}
 
@@ -236,16 +236,14 @@ public class GameState implements Comparable<GameState> {
 	 * computing a consistent heuristic that is even better, but not strictly
 	 * necessary.
 	 *
-	 * This function first calculates how much wood and gold still need to be
-	 * gathered, including the gold needed to build any peasants that are
-	 * required. Then, it computes how many actions are needed for each peasant
-	 * that is not currently at the town hall with no cargo (meaning it just
-	 * deposited) to finish its move-gather-move-deposit cycle. The amount of
-	 * wood and gold needed is adjusted for each of these cycles that finishes.
-	 * Then, assuming that wood and gold are still needed, the number of actions
-	 * needed to calculate it is then calculated. This total number of actions
-	 * is then divided by the optimal number of peasants, to account for full
-	 * parallelization.
+	 * This function figures out how many cycles of move-gather-move-deposit are
+	 * needed to get the remaining required resources and then multiplies this
+	 * by 15, which equates to a round trip of 13 moves. If the previous action
+	 * was one that was completed by multiple peasants, a bonus is applied
+	 * because it is assumed that these peasants will be able to work together
+	 * for the following moves. Building a new peasant is weighted the same as 4
+	 * gold runs, as long as the current number of peasants is not the same as
+	 * the optimal number of peasants.
 	 *
 	 * @return The value estimated remaining cost to reach a goal state from
 	 *         this state.
@@ -384,7 +382,7 @@ public class GameState implements Comparable<GameState> {
 			return new GameState(playernum, requiredGold, requiredWood,
 					buildPeasants, buildPeasantMap(peasants), trees, gold,
 					townHall, currentWood, currentGold - 400, action, getCost()
-							+ action.getActionCost(), xExtent, yExtent, this,
+					+ action.getActionCost(), xExtent, yExtent, this,
 					townHallID);
 
 			// Has the specified peasants deposit their goods at the TownHall
@@ -411,7 +409,7 @@ public class GameState implements Comparable<GameState> {
 			return new GameState(playernum, requiredGold, requiredWood,
 					buildPeasants, buildPeasantMap(updatedPeasants), trees,
 					gold, townHall, newWood, newGold, deposit, getCost()
-							+ deposit.getActionCost(), xExtent, yExtent, this,
+					+ deposit.getActionCost(), xExtent, yExtent, this,
 					townHallID);
 
 			// Has the specified peasants gather from a given resource
@@ -470,7 +468,7 @@ public class GameState implements Comparable<GameState> {
 			return new GameState(playernum, requiredGold, requiredWood,
 					buildPeasants, buildPeasantMap(moveUpdatedPeasants), trees,
 					gold, townHall, currentWood, currentGold, move, getCost()
-							+ move.getActionCost(), xExtent, yExtent, this,
+					+ move.getActionCost(), xExtent, yExtent, this,
 					townHallID);
 		default:
 			throw new RuntimeException("Default reached on switch statement.");
